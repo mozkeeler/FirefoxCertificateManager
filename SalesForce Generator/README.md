@@ -1,16 +1,10 @@
-___Generator Script___
+## Generator Script ##
 
-### Generates a JSON file from the csv for the extension.
+Given a file describing the CA certificates in Mozilla's CA program, Generates a JSON file for use by the extension.
 
-## Windows
-1. Install python 2.7 https://www.python.org/downloads/release/python-2710/
-2. Move the new csv with cert information into this folder and name it "BuiltInCAs.csv"
-3. Navigate to the current folder and run generate.sh by double clicking 
-4. Copy the SalesForceData.js generated in this folder into the ../addon/lib folder overwritting the old one.
-
-## Anywhere Else
-1. Install python 2.7 https://www.python.org/downloads/release/python-2710/
-2. Move the new csv with cert information into this folder and name it "BuiltInCAs.csv"
-3. Open a command prompt and navigate to the folder using ls to view files/folders in the current folder and cd <foldername> to go into a folder.
-4. Run generator using the command "python generator.js" from your terminal
-5. Copy the SalesForceData.js generated in this folder into the ../addon/lib folder overwritting the old one.
+#### Howto:
+* Install [https://www.python.org/downloads/release/python-2710/ Python 2.7]
+* Save the new [https://mozillacaprogram.secure.force.com/CA/IncludedCACertificateReportCSVFormat included CA certificate report] as `BuiltInCAs.csv` in this folder
+* On Windows, navigate to this folder and run `generate.sh` by double clicking 
+* On other platforms, use a terminal to navigate to this folder and run `python generator.py`
+* Copy the resulting `SalesForceData.js` file generated in this folder into the `../addon/lib` folder (overwritting the old one)
