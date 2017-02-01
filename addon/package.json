@@ -6,7 +6,7 @@
   "main": "lib/index.js",
   "author": "Rose-Hulman Senior Project",
   "engines": {
-    "firefox": ">=53.0a1"
+    "firefox": ">=38.0a1"
   },
   "license": "MIT",
   "dependencies": {
