@@ -37,14 +37,14 @@ exports.main = function(options,callback){
 exports.onUnload = function(reason){
 	CertManager.onUnload(reason);
 };
+
 /*
     First thing that is run
     Ran when the extension page is loaded sets up everything else on the page
 */
 function onReady(tab) {
-
     var worker = tab.attach({
-        contentScriptFile: [self.data.url("../node_modules/jquery/dist/jquery.min.js"), self.data.url("./scripts/inject.js")]
+        contentScriptFile: [self.data.url("../external/jquery/dist/jquery.min.js"), self.data.url("./scripts/inject.js")]
     });
 
     authMap = CertManager.genCAData();
@@ -62,7 +62,7 @@ function onReady(tab) {
         for (var i = 0; i < certs.length; i++) {
             var cert = certs[i];
             // if no common name, then display the friendly name
-            var name = cert.commonName.length > 0 ? cert.commonName : cert.nickname.split(":")[1];
+            var name = cert.displayName;
             var builtIn = CertManager.isCertBuiltIn(cert) ? "builtIn" : "customCert";
             var sslTrust = CertManager.isSSLTrust(cert) ? "checked" : "";
             var emailTrust = CertManager.isEmailTrust(cert) ? "checked" : "";
@@ -94,8 +94,8 @@ function onReady(tab) {
             for (var j = 0; j < certs.length; j++) {
                 var cert1 = certs[i];
                 var cert2 = certs[j];
-                var name1 = cert1.commonName.length > 0 ? cert1.commonName : cert1.nickname.split(":")[1];
-                var name2 = cert2.commonName.length > 0 ? cert2.commonName : cert2.nickname.split(":")[1];
+                var name1 = cert1.displayName;
+                var name2 = cert2.displayName;
                 if (name1.toLowerCase() >= name2.toLowerCase()) {
                     continue;
                 }
@@ -114,7 +114,7 @@ function onReady(tab) {
         for (var i = 0; i < certs.length; i++) {
             var cert = certs[i];
             // if no common name, then display the friendly name
-            var name = cert.commonName.length > 0 ? cert.commonName : cert.nickname.split(":")[1];
+            var name = cert.displayName;
             var builtIn = CertManager.isCertBuiltIn(cert) ? "builtIn" : "customCert";
             var sslTrust = CertManager.isSSLTrust(cert) ? "checked" : "";
             var emailTrust = CertManager.isEmailTrust(cert) ? "checked" : "";
@@ -194,4 +194,5 @@ function onReady(tab) {
         authMap[id].trusted = true;
         CertManager.entrustAuth(authMap[id]);
     });
+	worker.port.emit("reload_page", "page");
 }

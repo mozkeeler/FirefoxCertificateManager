@@ -2,17 +2,17 @@
     js from backend to front end
 */
 
-history.replaceState({to: "index.html"}, "index", "index.html");
+history.replaceState({to: "index.html" + window.location.search}, "index", "index.html" + window.location.search);
 var historySave = true;
 
 window.onpopstate = function(event) {
 	var prev = window.history.state.to;
 	historySave = false;
-	if(prev == "index.html?showAll"){
+	if(prev == "index.html?page=showAll"){
 		viewAllCerts();
 	} else if(prev == "index.html"){
 		showAuths();
-	} else if(prev == "index.html?showDetails"){
+	} else if(prev.indexOf("index.html?page=showDetails&id=") > -1){
 		showDetails(window.history.state.id);
 	}
 	historySave = true;
@@ -32,7 +32,7 @@ document.getElementById('import').onclick = function() {
 document.getElementById('exportButton').onclick = function() {
     export_certs();
 };
-document.getElementById('viewAllButton').onclick = function() {
+document.getElementById('listAllButton').onclick = function() {
     viewAllCerts();
 };
 
@@ -56,6 +56,23 @@ function entrustAuth(id) {
     self.port.emit("entrustAuth", id);
 }
 
+/*
+	Gets the value of the url parameter with the given name and returns italics
+*/
+self.port.on("reload_page", function getURLParameter(name) {
+	var reloadPage = decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)').exec(window.location.search)||[,""])[1].replace(/\+/g, '%20'))||null;
+	if(reloadPage != null){
+		historySave = false;
+		if(reloadPage == "showAll"){
+			viewAllCerts();
+		} else if(reloadPage == "showDetails"){
+			var authId = decodeURIComponent((new RegExp('[?|&]' + "id" + '=' + '([^&;]+?)(&|#|;|$)').exec(window.location.search)||[,""])[1].replace(/\+/g, '%20'))||null;
+			showDetails(authId);
+		}
+		historySave = true;
+	}
+});
+
 function showAuths() {
 	$("#authTitle").text("AUTHORITIES");
     $("#infoText").text("The search bar filters items by the authority name, geographic focus, and owner.");
@@ -63,7 +80,7 @@ function showAuths() {
     $("#certsSearch").toggle();
     $("#authsSearch").toggle();
     $("#main_table").toggle();
-	$("#viewButton").hide();
+	$("#showCertButton").hide();
 	$("#exportButton").hide();
     $("#authName").hide();
     $("#back_button").hide();
@@ -90,7 +107,7 @@ self.port.on("resetAuthTable", function resetAuthTable(){
 });
 
 self.port.on("resetCertTable", function resetCertTable(){
-    $("#viewAllButton").click();
+    $("#listAllButton").click();
 });
 
 /*
@@ -448,7 +465,7 @@ function entrust(num) {
  */
 function showDetails(num) {
 	if(historySave === true){
-		history.pushState({to: 'index.html?showDetails', id: num}, "showDetails", "index.html?showDetails");
+		history.pushState({to: 'index.html?page=showDetails&id=' + num, id: num}, "showDetails", "index.html?page=showDetails&id=" + num);
     }
     var table = document.getElementById("cert_table");
     while (table.hasChildNodes()) {
@@ -457,23 +474,34 @@ function showDetails(num) {
     window.listCerts(num);
     $("#authTitle").text("CERTIFICATES");
     $("#infoText").text("The search bar filters items by certificate names");
-    $("#main_table").toggle();
-    $("#detail_table").toggle();
-    $("#certsSearch").toggle();
-    $("#authsSearch").toggle();
+	if ($("#main_table").css('display') !== 'none') {
+        $("#main_table").toggle();
+    }
+    if ($("#detail_table").css('display') == 'none') {
+        $("#detail_table").toggle();
+    }
+    if ($("#certsSearch").css('display') == 'none') {
+        $("#certsSearch").toggle();
+    }
+    if ($("#authsSearch").css('display') !== 'none') {
+        $("#authsSearch").toggle();
+    }
     $("#authName").text($("#name" + num).text());
     var image = document.createElement('i');
     image.setAttribute("class", "fa fa-chevron-left fa-2x");
     image.title = "Go back to Authority list";
     $("#back_button").empty();
     document.getElementById("back_button").appendChild(image);
-    $("#viewButton").show();
+    $("#showCertButton").show();
     $("#exportButton").show();
     $("#authName").show();
+	if ($("#authName").css('display') == 'none') {
+        $("#authName").toggle();
+    }
     $("#back_button").show();
     $("#delete").show();
     $("#footer_plain").attr("id", "footer");
-    $("#viewButton").addClass("disabled");
+    $("#showCertButton").addClass("disabled");
     $("#delete").addClass("disabled");
 }
 
@@ -482,7 +510,7 @@ function showDetails(num) {
  */
 function viewAllCerts() {
 	if(historySave === true){
-		history.pushState({to: 'index.html?showAll'}, "showAll", "index.html?showAll");
+		history.pushState({to: 'index.html?page=showAll'}, "showAll", "index.html?page=showAll");
     }
 	var table = document.getElementById("cert_table");
     while (table.hasChildNodes()) {
@@ -508,7 +536,7 @@ function viewAllCerts() {
     image.title = "Go back to Authority list";
     $("#back_button").empty();
     document.getElementById("back_button").appendChild(image);
-    $("#viewButton").show();
+    $("#showCertButton").show();
     $("#exportButton").show();
     if ($("#authName").css('display') !== 'none') {
         $("#authName").toggle();
@@ -516,7 +544,7 @@ function viewAllCerts() {
     $("#back_button").show();
     $("#delete").show();
     $("#footer_plain").attr("id", "footer");
-    $("#viewButton").addClass("disabled");
+    $("#showCertButton").addClass("disabled");
     $("#delete").addClass("disabled");
 }
 
@@ -649,9 +677,9 @@ self.port.on("insert_cert", function insert_cert(id, num, name, builtin, web, em
     var table = document.getElementById("cert_table");
     table.appendChild(parent);
 
-    // functionality of view button at bottom of page.
+    // functionality of show cert button at bottom of page.
     // opens up cert in the old cert manager
-	document.getElementById('viewButton').onclick = function() {
+	document.getElementById('showCertButton').onclick = function() {
         // the id attribute contains the id and num for each cert so pass that back to viewCert
         var selectedRowIdAndNum = $("#cert_table tr.selected").attr('id');
         var idAndNum = selectedRowIdAndNum.split("-");
@@ -712,10 +740,10 @@ self.port.on("insert_cert", function insert_cert(id, num, name, builtin, web, em
 	var rowOnClick = function(){
 		$(this).addClass("selected").siblings().removeClass("selected");
 		$("#delete").removeClass("disabled");
-		$("#viewButton").removeClass("disabled");
+		$("#showCertButton").removeClass("disabled");
 	};
 
-  // handels double click. calls the viewcert function to open in old manager
+  // handles double click. calls the viewcert function to open in old manager
 	var rowOnDblClick = function(){
         // the id attribute contains the id and num for each cert so pass that back to viewCert
         var selectedRowIdAndNum = $("#cert_table tr.selected").attr('id');
