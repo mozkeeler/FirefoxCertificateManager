@@ -62,19 +62,8 @@ function getCM() {
         }
     };
 
-    CertManager.isBuiltinToken = function(tokenName) {
-        return tokenName == "Builtin Object Token";
-    };
-
     CertManager.isCertBuiltIn = function(cert) {
-        let tokenNames = cert.getAllTokenNames({});
-        if (!tokenNames) {
-            return false;
-        }
-        if (tokenNames.some(CertManager.isBuiltinToken)) {
-            return true;
-        }
-        return false;
+        return cert.isBuiltInRoot;
     };
 
     CertManager.isTrusted = function(cert) {
